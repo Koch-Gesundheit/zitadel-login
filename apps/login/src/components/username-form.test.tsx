@@ -23,4 +23,15 @@ describe("UsernameForm", () => {
     );
     expect(getByTestId("username-text-input")).toHaveFocus();
   });
+
+  test("zeigt unter dem Hinweis zum Zurücksetzen den Hinweis zur Adresse, mit der bezahlt wurde", () => {
+    const { getByTestId } = render(
+      <UsernameForm loginName="" requestId={undefined} loginSettings={undefined} submit={false} allowRegister={false} />,
+    );
+
+    const addressHint = getByTestId("address-hint");
+    expect(addressHint).toBeInTheDocument();
+    expect(addressHint.querySelector("[data-i18n-key='loginname.addressHint']")).toBeInTheDocument();
+    expect(getByTestId("password-reset-hint").nextElementSibling).toBe(addressHint);
+  });
 });
