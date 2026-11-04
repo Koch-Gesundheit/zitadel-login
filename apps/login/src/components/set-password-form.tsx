@@ -2,6 +2,7 @@
 
 import { lowerCaseValidator, numberValidator, symbolValidator, upperCaseValidator } from "@/helpers/validators";
 import { handleServerActionResponse } from "@/lib/client-utils";
+import { KOSMOS_NEW_LINK_URL } from "@/lib/kosmos-links";
 import { changePassword, resetPassword, sendPassword } from "@/lib/server/password";
 import { create } from "@zitadel/client";
 import { ChecksSchema } from "@zitadel/proto/zitadel/session/v2/session_service_pb";
@@ -14,6 +15,7 @@ import { Alert, AlertType } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
+import { ButtonLink } from "./button-link";
 import { TextInput } from "./input";
 import { PasswordComplexity } from "./password-complexity";
 import { Spinner } from "./spinner";
@@ -59,12 +61,15 @@ export function SetPasswordForm({
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  // Der Code, den der Server zuletzt als unbrauchbar gemeldet hat (null: es gibt keine solche Meldung)
+  const [unusableCode, setUnusableCode] = useState<string | null>(null);
   const [samlData, setSamlData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
 
   const router = useRouter();
 
   async function resendCode() {
     setError("");
+    setUnusableCode(null);
     setLoading(true);
 
     const response = await resetPassword({
@@ -89,6 +94,7 @@ export function SetPasswordForm({
 
   async function submitPassword(values: Inputs) {
     setLoading(true);
+    setUnusableCode(null);
 
     let payload: { userId: string; password: string; code?: string; organization?: string } = {
       userId: userId,
@@ -111,6 +117,13 @@ export function SetPasswordForm({
       });
 
     if (changeResponse && "error" in changeResponse) {
+      if ("codeProblem" in changeResponse && changeResponse.codeProblem) {
+        // Steht der Code aus dem Link unverändert im Feld, ist der Link das Problem, sonst die Eingabe.
+        setError(code && values.code === code ? t("set.errors.linkUnusable") : changeResponse.error);
+        setUnusableCode(values.code ?? "");
+        return;
+      }
+
       setError(changeResponse.error);
       return;
     }
@@ -156,6 +169,13 @@ export function SetPasswordForm({
 
   const watchPassword = watch("password", "");
   const watchConfirmPassword = watch("confirmPassword", "");
+  const watchCode = watch("code", "");
+
+  const codeProblem = unusableCode !== null;
+  // Der Server hat den Code aus dem Link als unbrauchbar gemeldet und er steht unverändert im Feld: Weiter scheitert mit
+  // demselben Code wieder, der Ausweg ist ein neuer Link. Gebunden an den gemeldeten Code, damit ein zuvor getippter,
+  // falscher Code den Link nicht zu Unrecht für tot erklärt, wenn die Nutzerin den Link-Code wieder einträgt.
+  const linkDead = !!code && unusableCode === code && watchCode === code;
 
   const hasMinLength = passwordComplexitySettings && watchPassword?.length >= passwordComplexitySettings.minLength;
   const hasSymbol = symbolValidator(watchPassword);
@@ -252,12 +272,24 @@ export function SetPasswordForm({
 
         {error && <Alert>{error}</Alert>}
 
+        {codeProblem && (
+          <div className="mt-4">
+            <ButtonLink
+              href={KOSMOS_NEW_LINK_URL}
+              variant={linkDead ? ButtonVariants.Primary : ButtonVariants.Secondary}
+              data-testid="new-link-button"
+            >
+              {t("set.newLink")}
+            </ButtonLink>
+          </div>
+        )}
+
         <div className="mt-8 flex w-full flex-row items-center justify-between">
           <BackButton data-testid="back-button" />
           <Button
             type="submit"
             variant={ButtonVariants.Primary}
-            disabled={loading || !policyIsValid || !formState.isValid || watchPassword !== watchConfirmPassword}
+            disabled={loading || !policyIsValid || !formState.isValid || watchPassword !== watchConfirmPassword || linkDead}
             onClick={handleSubmit(submitPassword)}
             data-testid="submit-button"
           >

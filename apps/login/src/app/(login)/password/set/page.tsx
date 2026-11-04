@@ -4,6 +4,7 @@ import { SetPasswordForm } from "@/components/set-password-form";
 import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
 import { UNKNOWN_USER_ID } from "@/lib/constants";
+import { showCodeSentBanner } from "@/lib/password-set";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
 import {
@@ -130,7 +131,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
       </div>
 
       <div className="w-full">
-        {!initial && (
+        {showCodeSentBanner({ initial, code }) && (
           <Alert type={AlertType.INFO}>
             <Translated i18nKey="set.codeSent" namespace="password" />
           </Alert>
