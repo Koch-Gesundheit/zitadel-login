@@ -26,7 +26,7 @@
     "title": "Welcome back!",
     "description": "Enter your login details.",
     "passwordResetHint": "Forgot your password? After entering your email address you will find the reset link on the next page.",
-    "addressHint": "Sign in with the email address you paid with. With PayPal or Klarna this can differ from your usual one. If no access email arrives, send the address from your payment confirmation to support@drsimonekoch.de.",
+    "addressHint": "Sign in with the email address you paid with. With PayPal or Klarna this can differ from your usual one. If no access email arrives, write to support@drsimonekoch.de and tell us the address from your payment confirmation.",
     "register": "Register new user",
     "submit": "Continue",
     "labels": {

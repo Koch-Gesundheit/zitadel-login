@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import de from "../../locales/de.json";
 import en from "../../locales/en.json";
+import { KOSMOS_NEW_LINK_URL } from "../lib/kosmos-links";
 
 type Tree = { [key: string]: string | Tree };
 
@@ -23,6 +24,10 @@ const SIE_FORM = /\b(Sie|Ihnen|Ihr|Ihre|Ihrem|Ihren|Ihrer|Ihres)\b/;
 // Halbgeviertstrich (U+2013) und Geviertstrich (U+2014), per Codepoint, damit die Datei selbst keinen enthält
 const GEDANKENSTRICH = new RegExp(`[${String.fromCodePoint(0x2013)}${String.fromCodePoint(0x2014)}]`);
 const PLACEHOLDER = /\{[^}]*\}/g;
+
+// Die Fehlertexte nennen die Seite für einen neuen Link ohne Protokoll; der Knopf im Formular verlinkt dieselbe Seite
+const NEW_LINK_PAGE = ((url: URL) => url.host + url.pathname)(new URL(KOSMOS_NEW_LINK_URL));
+const SUPPORT_ADDRESS = "support@drsimonekoch.de";
 
 // Texte, die für Kochs Kosmos neu dazugekommen sind; Englisch ist der Fallback für alle Sprachen ohne eigenen Eintrag
 const NEW_KEYS = [
@@ -91,5 +96,21 @@ describe("locales/en.json", () => {
 
   test.each(NEW_KEYS)("neuer Schlüssel %s ist vorhanden und nicht leer", (key) => {
     expect(englishTexts[key]?.trim()).toBeTruthy();
+  });
+});
+
+describe("Texte nennen die Ziele, die sie versprechen", () => {
+  const SPRACHEN: [string, Record<string, string>][] = [
+    ["de", germanTexts],
+    ["en", englishTexts],
+  ];
+
+  test.each(SPRACHEN)("%s: Link- und Code-Fehler nennen die Seite für einen neuen Link", (_sprache, texts) => {
+    expect(texts["password.set.errors.linkUnusable"]).toContain(NEW_LINK_PAGE);
+    expect(texts["password.set.errors.codeUnusable"]).toContain(NEW_LINK_PAGE);
+  });
+
+  test.each(SPRACHEN)("%s: der Adress-Hinweis nennt die Support-Adresse", (_sprache, texts) => {
+    expect(texts["loginname.addressHint"]).toContain(SUPPORT_ADDRESS);
   });
 });

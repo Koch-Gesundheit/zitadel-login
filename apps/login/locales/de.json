@@ -26,7 +26,7 @@
     "title": "Willkommen zurück!",
     "description": "Gib deine Anmeldedaten ein.",
     "passwordResetHint": "Passwort vergessen? Nach der Eingabe deiner E-Mail-Adresse findest du auf der nächsten Seite den Link zum Zurücksetzen.",
-    "addressHint": "Melde dich mit der E-Mail-Adresse an, mit der du bezahlt hast. Bei PayPal oder Klarna kann das eine andere sein als deine übliche. Kommt keine Zugangsmail an, schick uns die Adresse aus deiner Zahlungsbestätigung an support@drsimonekoch.de.",
+    "addressHint": "Melde dich mit der E-Mail-Adresse an, mit der du bezahlt hast. Bei PayPal oder Klarna kann das eine andere sein als deine übliche. Kommt keine Zugangsmail an, schreib an support@drsimonekoch.de und nenn uns die Adresse aus deiner Zahlungsbestätigung.",
     "register": "Neuen Benutzer registrieren",
     "submit": "Weiter",
     "labels": {
@@ -105,7 +105,7 @@
         "couldNotResetPassword": "Passwort konnte nicht zurückgesetzt werden",
         "couldNotVerifyPassword": "Passwort konnte nicht verifiziert werden",
         "linkUnusable": "Dieser Link ist abgelaufen oder wurde schon benutzt. Einen neuen Link holst du unter mein.drsimonekoch.de/einrichten.",
-        "codeUnusable": "Der Code stimmt nicht oder ist abgelaufen. Prüf die Eingabe noch einmal oder hol dir einen neuen Link unter mein.drsimonekoch.de/einrichten."
+        "codeUnusable": "Der Code stimmt nicht oder ist abgelaufen. Prüf deine Eingabe noch einmal oder hol dir einen neuen Link unter mein.drsimonekoch.de/einrichten."
       }
     },
     "change": {
