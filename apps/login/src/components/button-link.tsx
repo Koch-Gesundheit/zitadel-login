@@ -8,7 +8,8 @@ export type ButtonLinkProps = DetailedHTMLProps<AnchorHTMLAttributes<HTMLAnchorE
   color?: ButtonColors;
 };
 
-// Ein Link, der wie ein <Button> aussieht (gleiche Klassen, gleiche Theme-Werte).
+// Ein Link, der wie ein <Button> aussieht (gleiche Klassen, gleiche Theme-Werte). min-h-11 hält ihn auf mindestens 44 px
+// (Fingerziel am Handy); die 36 px aus getButtonClasses schlagen das nicht, weil min-height über height gewinnt.
 export function ButtonLink({
   children,
   className = "",
@@ -23,7 +24,7 @@ export function ButtonLink({
 
   return (
     <a
-      className={`${getButtonClasses(size, variant, color, getComponentRoundness("button"), appearance)} ${className}`}
+      className={`${getButtonClasses(size, variant, color, getComponentRoundness("button"), appearance)} min-h-11 ${className}`}
       {...props}
     >
       {children}

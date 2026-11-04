@@ -14,7 +14,7 @@ describe("ButtonLink", () => {
     expect(link).not.toHaveAttribute("target");
   });
 
-  it("uses the same classes as the secondary Button", () => {
+  it("uses the same classes as the secondary Button plus a minimum height of 44px", () => {
     const { getByTestId } = render(
       <>
         <Button variant={ButtonVariants.Secondary} data-testid="button">
@@ -26,7 +26,25 @@ describe("ButtonLink", () => {
       </>,
     );
 
-    expect(getByTestId("link").className.trim()).toBe(getByTestId("button").className.trim());
+    const buttonClasses = getByTestId("button").className.trim().split(/\s+/);
+    const linkClasses = getByTestId("link").className.trim().split(/\s+/);
+    expect(linkClasses).toEqual([...buttonClasses, "min-h-11"]);
+  });
+
+  it("keeps min-h-11 in every variant, so the 36px height of the Button classes cannot win", () => {
+    const { getByTestId } = render(
+      <>
+        <ButtonLink href="/x" variant={ButtonVariants.Secondary} data-testid="secondary">
+          Weiter
+        </ButtonLink>
+        <ButtonLink href="/x" variant={ButtonVariants.Primary} className="custom-class" data-testid="primary">
+          Weiter
+        </ButtonLink>
+      </>,
+    );
+
+    expect(getByTestId("secondary")).toHaveClass("min-h-11");
+    expect(getByTestId("primary")).toHaveClass("min-h-11", "custom-class");
   });
 
   it("supports the primary variant, a custom className and further attributes", () => {

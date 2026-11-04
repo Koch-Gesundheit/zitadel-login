@@ -61,14 +61,15 @@ export function SetPasswordForm({
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [codeProblem, setCodeProblem] = useState<boolean>(false);
+  // Der Code, den der Server zuletzt als unbrauchbar gemeldet hat (null: es gibt keine solche Meldung)
+  const [unusableCode, setUnusableCode] = useState<string | null>(null);
   const [samlData, setSamlData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
 
   const router = useRouter();
 
   async function resendCode() {
     setError("");
-    setCodeProblem(false);
+    setUnusableCode(null);
     setLoading(true);
 
     const response = await resetPassword({
@@ -93,7 +94,7 @@ export function SetPasswordForm({
 
   async function submitPassword(values: Inputs) {
     setLoading(true);
-    setCodeProblem(false);
+    setUnusableCode(null);
 
     let payload: { userId: string; password: string; code?: string; organization?: string } = {
       userId: userId,
@@ -119,7 +120,7 @@ export function SetPasswordForm({
       if ("codeProblem" in changeResponse && changeResponse.codeProblem) {
         // Steht der Code aus dem Link unverändert im Feld, ist der Link das Problem, sonst die Eingabe.
         setError(code && values.code === code ? t("set.errors.linkUnusable") : changeResponse.error);
-        setCodeProblem(true);
+        setUnusableCode(values.code ?? "");
         return;
       }
 
@@ -168,6 +169,13 @@ export function SetPasswordForm({
 
   const watchPassword = watch("password", "");
   const watchConfirmPassword = watch("confirmPassword", "");
+  const watchCode = watch("code", "");
+
+  const codeProblem = unusableCode !== null;
+  // Der Server hat den Code aus dem Link als unbrauchbar gemeldet und er steht unverändert im Feld: Weiter scheitert mit
+  // demselben Code wieder, der Ausweg ist ein neuer Link. Gebunden an den gemeldeten Code, damit ein zuvor getippter,
+  // falscher Code den Link nicht zu Unrecht für tot erklärt, wenn die Nutzerin den Link-Code wieder einträgt.
+  const linkDead = !!code && unusableCode === code && watchCode === code;
 
   const hasMinLength = passwordComplexitySettings && watchPassword?.length >= passwordComplexitySettings.minLength;
   const hasSymbol = symbolValidator(watchPassword);
@@ -266,7 +274,11 @@ export function SetPasswordForm({
 
         {codeProblem && (
           <div className="mt-4">
-            <ButtonLink href={KOSMOS_NEW_LINK_URL} data-testid="new-link-button">
+            <ButtonLink
+              href={KOSMOS_NEW_LINK_URL}
+              variant={linkDead ? ButtonVariants.Primary : ButtonVariants.Secondary}
+              data-testid="new-link-button"
+            >
               {t("set.newLink")}
             </ButtonLink>
           </div>
@@ -277,7 +289,7 @@ export function SetPasswordForm({
           <Button
             type="submit"
             variant={ButtonVariants.Primary}
-            disabled={loading || !policyIsValid || !formState.isValid || watchPassword !== watchConfirmPassword}
+            disabled={loading || !policyIsValid || !formState.isValid || watchPassword !== watchConfirmPassword || linkDead}
             onClick={handleSubmit(submitPassword)}
             data-testid="submit-button"
           >
