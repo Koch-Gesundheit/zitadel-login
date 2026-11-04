@@ -1,5 +1,6 @@
 "use server";
 
+import { UNKNOWN_USER_ID } from "@/lib/constants";
 import { isClassifiedError } from "@/lib/grpc/interceptors/error-classification";
 import { createLogger } from "@/lib/logger";
 import { recordAuthAttempt, recordAuthFailure, recordAuthSuccess } from "@/lib/metrics";
@@ -461,6 +462,16 @@ export async function changePassword(command: {
   const { serviceConfig } = getServiceConfig(_headers);
   const t = await getTranslations("password");
 
+  // Antwort für einen unbrauchbaren Code (Link benutzt, abgelaufen, falsch).
+  const codeProblem = { error: t("set.errors.codeUnusable"), codeProblem: true };
+
+  // Die Seite setzt die Platzhalter-ID, wenn zur Adresse kein Konto gehört (ignoreUnknownUsernames). Sie bekommt dieselbe
+  // Antwort wie ein unbrauchbarer Code, sonst verriete der Unterschied, ob es das Konto gibt; getUserByID würfe für die ID
+  // einen Fehler.
+  if (command.userId === UNKNOWN_USER_ID) {
+    return codeProblem;
+  }
+
   // check for init state
   const { user } = await getUserByID({ serviceConfig, userId: command.userId });
 
@@ -496,10 +507,8 @@ export async function changePassword(command: {
     }
   }
 
-  // Ein unbrauchbarer Code (Link benutzt, abgelaufen, falsch) kommt je nach Fehlerart zurückgegeben oder geworfen an.
-  // Geworfene Fehler gehen in der Produktion nur als Standardtext zum Browser, darum beides hier in dieselbe Antwort fassen.
-  const codeProblem = { error: t("set.errors.codeUnusable"), codeProblem: true };
-
+  // Ein unbrauchbarer Code kommt je nach Fehlerart zurückgegeben oder geworfen an. Geworfene Fehler gehen in der Produktion
+  // nur als Standardtext zum Browser, darum beides hier in dieselbe Antwort fassen.
   try {
     const result = await setUserPassword({ serviceConfig, userId, password: command.password, code: command.code });
 

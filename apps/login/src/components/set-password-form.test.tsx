@@ -1,3 +1,4 @@
+import { UNKNOWN_USER_ID } from "@/lib/constants";
 import { changePassword } from "@/lib/server/password";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { create } from "@zitadel/client";
@@ -68,12 +69,12 @@ describe("SetPasswordForm bei unbrauchbarem Code", () => {
 
   afterEach(cleanup);
 
-  function renderForm(code?: string) {
+  function renderForm(code?: string, userId = "user-1") {
     return render(
       <SetPasswordForm
         passwordComplexitySettings={defaultComplexitySettings}
         loginName="test@example.com"
-        userId="user-1"
+        userId={userId}
         code={code}
         codeRequired={true}
       />,
@@ -129,6 +130,18 @@ describe("SetPasswordForm bei unbrauchbarem Code", () => {
 
     expect(await view.findByText("Der Code stimmt nicht")).toBeInTheDocument();
     expect(view.getByTestId("new-link-button")).toBeInTheDocument();
+  });
+
+  test("zeigt für eine unbekannte Adresse (Platzhalter-ID, kein Code im Link) den Text des Servers und den Weg zu einem neuen Link", async () => {
+    vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
+    const view = renderForm(undefined, UNKNOWN_USER_ID);
+
+    await submit(view, { code: "000000" });
+
+    expect(await view.findByText("Der Code stimmt nicht")).toBeInTheDocument();
+    expect(view.queryByText("set.errors.linkUnusable")).not.toBeInTheDocument();
+    expect(view.getByTestId("new-link-button")).toHaveAttribute("href", NEW_LINK_URL);
+    expect(changePassword).toHaveBeenCalledWith(expect.objectContaining({ userId: UNKNOWN_USER_ID, code: "000000" }));
   });
 
   test("andere Fehler zeigen nur den Alert, ohne Link", async () => {
