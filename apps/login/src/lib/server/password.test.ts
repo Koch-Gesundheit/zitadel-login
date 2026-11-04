@@ -1,4 +1,5 @@
 import { Code, ConnectError } from "@connectrpc/connect";
+import { UserState } from "@zitadel/proto/zitadel/user/v2/user_pb";
 import { AuthenticationMethodType } from "@zitadel/proto/zitadel/user/v2/user_service_pb";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ClassifiedConnectError } from "../grpc/interceptors/error-classification";
@@ -553,5 +554,69 @@ describe("changePassword", () => {
 
     expect(result).toEqual({ error: "errors.couldNotSendResetLink" });
     expect(mockSetUserPassword).not.toHaveBeenCalled();
+  });
+
+  describe("with a code from a reset link", () => {
+    const command = { userId: "user123", password: "Test-Probe-1104!x", code: "123456" };
+
+    beforeEach(() => {
+      mockGetUserByID.mockResolvedValue({ user: { userId: "user123", state: UserState.ACTIVE } });
+    });
+
+    test("should pass the code on to setUserPassword and return its result", async () => {
+      const response = { details: { sequence: BigInt(1) } };
+      mockSetUserPassword.mockResolvedValue(response);
+
+      const result = await changePassword(command);
+
+      expect(result).toBe(response);
+      expect(mockSetUserPassword).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: "user123", password: "Test-Probe-1104!x", code: "123456" }),
+      );
+    });
+
+    test.each([
+      "[failed_precondition] Code konnte nicht gefunden werden (COMMAND-2M9fs)",
+      "[failed_precondition] Code ist abgelaufen (CODE-QvUQ4P)",
+      "[failed_precondition] Code not found (COMMAND-2M9fs)",
+    ])("should turn the returned error %s into a code problem", async (message) => {
+      mockSetUserPassword.mockResolvedValue({ error: message });
+
+      const result = await changePassword(command);
+
+      expect(result).toEqual({ error: "set.errors.codeUnusable", codeProblem: true });
+    });
+
+    test.each([
+      "[invalid_argument] Code ist nicht gültig (CODE-woT0xc)",
+      "[invalid_argument] Code is invalid (CODE-woT0xc)",
+      "[invalid_argument] Errors.User.Code.CryptoCodeNil (CRYPT-aqrFV)",
+    ])("should turn the thrown error %s into a code problem", async (message) => {
+      mockSetUserPassword.mockRejectedValue(new ClassifiedConnectError(new ConnectError(message, Code.InvalidArgument)));
+
+      const result = await changePassword(command);
+
+      expect(result).toEqual({ error: "set.errors.codeUnusable", codeProblem: true });
+    });
+
+    test("should return other returned errors unchanged", async () => {
+      const response = {
+        error: "[failed_precondition] New password cannot be the same as your current password (COMMAND-Aesh5)",
+      };
+      mockSetUserPassword.mockResolvedValue(response);
+
+      const result = await changePassword(command);
+
+      expect(result).toBe(response);
+    });
+
+    test("should rethrow other thrown errors", async () => {
+      const failure = new ClassifiedConnectError(
+        new ConnectError("Password is invalid (COMMAND-3M0fs)", Code.InvalidArgument),
+      );
+      mockSetUserPassword.mockRejectedValue(failure);
+
+      await expect(changePassword(command)).rejects.toBe(failure);
+    });
   });
 });
