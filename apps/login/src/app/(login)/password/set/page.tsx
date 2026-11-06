@@ -1,9 +1,10 @@
-import { Alert, AlertType } from "@/components/alert";
+import { Alert } from "@/components/alert";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SetPasswordForm } from "@/components/set-password-form";
 import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
 import { UNKNOWN_USER_ID } from "@/lib/constants";
+import { showCodeSentBanner } from "@/lib/password-set";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
 import {
@@ -104,7 +105,8 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     <DynamicTheme branding={branding}>
       <div className="flex flex-col space-y-4">
         <h1>{session?.factors?.user?.displayName ?? <Translated i18nKey="set.title" namespace="password" />}</h1>
-        <p className="ztdl-p mb-6 block">
+        {/* Bei totem Link steht unten nur „Neuen Link schicken“; die Aufforderung zum Passwort entfällt dann (data-link-tot, :has) */}
+        <p className="ztdl-p mb-6 block [:root:has([data-link-tot])_&]:hidden">
           <Translated i18nKey="set.description" namespace="password" />
         </p>
 
@@ -130,12 +132,6 @@ export default async function Page(props: { searchParams: Promise<Record<string 
       </div>
 
       <div className="w-full">
-        {!initial && (
-          <Alert type={AlertType.INFO}>
-            <Translated i18nKey="set.codeSent" namespace="password" />
-          </Alert>
-        )}
-
         {passwordComplexity &&
         (loginName ?? user?.preferredLoginName) &&
         (userId ?? session?.factors?.user?.id ?? (loginSettings?.ignoreUnknownUsernames ? UNKNOWN_USER_ID : undefined)) ? (
@@ -148,6 +144,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             defaultOrganization={defaultOrganization}
             passwordComplexitySettings={passwordComplexity}
             codeRequired={!(initial === "true")}
+            codeSent={showCodeSentBanner({ initial, code })}
           />
         ) : (
           <div className="py-4">

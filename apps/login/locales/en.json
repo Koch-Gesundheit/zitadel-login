@@ -29,7 +29,7 @@
     "register": "Register new user",
     "submit": "Continue",
     "labels": {
-      "loginname": "Loginname",
+      "loginname": "Email address",
       "username": "Username",
       "usernameOrPhoneNumber": "Username or phone number",
       "usernameOrEmail": "Username or email"
@@ -86,7 +86,8 @@
       "description": "Set the password for your account",
       "codeSent": "A new code has been sent to your email address.",
       "noCodeReceived": "Didn't receive a code?",
-      "resend": "Resend code",
+      "resend": "Send a new code",
+      "newLink": "Send a new link",
       "submit": "Continue",
       "labels": {
         "code": "Code",
@@ -101,8 +102,13 @@
       "errors": {
         "couldNotSetPassword": "Could not set password",
         "couldNotResetPassword": "Could not reset password",
-        "couldNotVerifyPassword": "Could not verify password"
-      }
+        "couldNotVerifyPassword": "Could not verify password",
+        "linkUnusable": "This link has expired or has already been used.",
+        "codeUnusable": "The code is wrong or has expired. Check what you typed or have a new code sent to you."
+      },
+      "newCode": "Send a new code",
+      "linkResent": "A new link is on its way. Only our most recent email counts. Please also check your spam folder. If nothing arrives, write to support@drsimonekoch.de.",
+      "codeResent": "If an account belongs to this address, a new code is on its way. If nothing arrives again, go back and use the address we sent your access to."
     },
     "change": {
       "title": "Change Password",
@@ -140,8 +146,8 @@
       "couldNotSendResetLink": "Could not send Password Reset Link",
       "couldNotCreateSessionForUser": "Could not create session for user",
       "couldNotVerifyPassword": "Could not verify password",
-      "failedToAuthenticate": "Failed to authenticate. You had {failedAttempts} of {maxPasswordAttempts} password attempts.{lockoutMessage}",
-      "failedToAuthenticateNoLimit": "Failed to authenticate.",
+      "failedToAuthenticate": "Email address or password is incorrect. Use the address we sent your access to. Attempt {failedAttempts} of {maxPasswordAttempts}.{lockoutMessage}",
+      "failedToAuthenticateNoLimit": "Email address or password is incorrect. Use the address we sent your access to.",
       "accountLockedContactAdmin": " Contact your administrator to unlock your account",
       "userNotFound": "User not found in the system",
       "initialUserNotSupported": "Initial User not supported",
