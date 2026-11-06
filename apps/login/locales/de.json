@@ -26,7 +26,6 @@
     "title": "Willkommen zurück!",
     "description": "Gib deine Anmeldedaten ein.",
     "passwordResetHint": "Passwort vergessen? Nach der Eingabe deiner E-Mail-Adresse findest du auf der nächsten Seite den Link zum Zurücksetzen.",
-    "addressHint": "Melde dich mit der E-Mail-Adresse an, mit der du bezahlt hast. Bei PayPal oder Klarna kann das eine andere sein als deine übliche. Kommt keine Zugangsmail an, schreib an support@drsimonekoch.de und nenn uns die Adresse aus deiner Zahlungsbestätigung.",
     "register": "Neuen Benutzer registrieren",
     "submit": "Weiter",
     "labels": {
@@ -87,8 +86,8 @@
       "description": "Lege das Passwort für dein Konto fest",
       "codeSent": "Wenn zu dieser Adresse ein Konto gehört, haben wir dir gerade einen Code per E-Mail geschickt. Trag ihn unten ein.",
       "noCodeReceived": "Keinen Code erhalten?",
-      "resend": "Erneut senden",
-      "newLink": "Neuen Link holen",
+      "resend": "Neuen Code schicken",
+      "newLink": "Neuen Link schicken",
       "submit": "Weiter",
       "labels": {
         "code": "Code",
@@ -104,9 +103,12 @@
         "couldNotSetPassword": "Passwort konnte nicht gesetzt werden",
         "couldNotResetPassword": "Passwort konnte nicht zurückgesetzt werden",
         "couldNotVerifyPassword": "Passwort konnte nicht verifiziert werden",
-        "linkUnusable": "Dieser Link ist abgelaufen oder wurde schon benutzt. Einen neuen Link holst du unter mein.drsimonekoch.de/einrichten.",
-        "codeUnusable": "Der Code stimmt nicht oder ist abgelaufen. Prüf deine Eingabe noch einmal oder hol dir einen neuen Link unter mein.drsimonekoch.de/einrichten."
-      }
+        "linkUnusable": "Dieser Link ist abgelaufen oder wurde schon benutzt.",
+        "codeUnusable": "Der Code stimmt nicht oder ist abgelaufen. Prüf deine Eingabe noch einmal oder lass dir einen neuen Code schicken."
+      },
+      "newCode": "Neuen Code schicken",
+      "linkResent": "Ein neuer Link ist unterwegs. Es zählt nur die neueste Mail von uns. Schau auch im Spam-Ordner nach.",
+      "codeResent": "Wenn zu dieser Adresse ein Konto gehört, ist ein neuer Code unterwegs. Kommt wieder nichts an, geh zurück und nimm die Adresse, an die wir dir deinen Zugang geschickt haben."
     },
     "change": {
       "title": "Passwort ändern",
@@ -144,8 +146,8 @@
       "couldNotSendResetLink": "Passwort-Zurücksetzungslink konnte nicht gesendet werden",
       "couldNotCreateSessionForUser": "Sitzung für Benutzer konnte nicht erstellt werden",
       "couldNotVerifyPassword": "Passwort konnte nicht verifiziert werden",
-      "failedToAuthenticate": "Authentifizierung fehlgeschlagen. Du hast {failedAttempts} von {maxPasswordAttempts} Passwortversuchen.{lockoutMessage}",
-      "failedToAuthenticateNoLimit": "Authentifizierung fehlgeschlagen.",
+      "failedToAuthenticate": "E-Mail-Adresse oder Passwort stimmt nicht. Nimm die Adresse, an die wir dir deinen Zugang geschickt haben. Versuch {failedAttempts} von {maxPasswordAttempts}.{lockoutMessage}",
+      "failedToAuthenticateNoLimit": "E-Mail-Adresse oder Passwort stimmt nicht. Nimm die Adresse, an die wir dir deinen Zugang geschickt haben.",
       "accountLockedContactAdmin": " Kontaktiere deinen Administrator, um dein Konto zu entsperren",
       "userNotFound": "Benutzer nicht im System gefunden",
       "initialUserNotSupported": "Initialbenutzer wird nicht unterstützt",

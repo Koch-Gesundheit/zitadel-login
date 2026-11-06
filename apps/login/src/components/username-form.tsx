@@ -112,7 +112,7 @@ export function UsernameForm({
             label={inputLabel}
             data-testid="username-text-input"
             suffix={suffix}
-            aria-describedby="password-reset-hint address-hint"
+            aria-describedby="password-reset-hint"
           />
           <p
             id="password-reset-hint"
@@ -120,13 +120,6 @@ export function UsernameForm({
             data-testid="password-reset-hint"
           >
             <Translated i18nKey="passwordResetHint" namespace="loginname" />
-          </p>
-          <p
-            id="address-hint"
-            className="text-text-light-secondary-500 dark:text-text-dark-secondary-500 mt-4 text-sm"
-            data-testid="address-hint"
-          >
-            <Translated i18nKey="addressHint" namespace="loginname" />
           </p>
           {allowRegister && (
             <button

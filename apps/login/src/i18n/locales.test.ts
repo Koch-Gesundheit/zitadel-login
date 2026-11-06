@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import de from "../../locales/de.json";
 import en from "../../locales/en.json";
-import { KOSMOS_NEW_LINK_URL } from "../lib/kosmos-links";
 
 type Tree = { [key: string]: string | Tree };
 
@@ -25,16 +24,20 @@ const SIE_FORM = /\b(Sie|Ihnen|Ihr|Ihre|Ihrem|Ihren|Ihrer|Ihres)\b/;
 const GEDANKENSTRICH = new RegExp(`[${String.fromCodePoint(0x2013)}${String.fromCodePoint(0x2014)}]`);
 const PLACEHOLDER = /\{[^}]*\}/g;
 
-// Die Fehlertexte nennen die Seite für einen neuen Link ohne Protokoll; der Knopf im Formular verlinkt dieselbe Seite
-const NEW_LINK_PAGE = ((url: URL) => url.host + url.pathname)(new URL(KOSMOS_NEW_LINK_URL));
-const SUPPORT_ADDRESS = "support@drsimonekoch.de";
+// Zweite Fassung (06.11.2026): Fehler führen nicht mehr auf eine andere Seite, der Knopf schickt den neuen Link direkt
+const EINRICHTEN_SEITE = "mein.drsimonekoch.de/einrichten";
+// Hinweis zur Adresse, nur in den Fehlerfällen (gescheiterte Anmeldung, nach dem erneuten Schicken des Codes)
+const ADRESS_HINWEIS = "an die wir dir deinen Zugang geschickt haben";
+const ADDRESS_HINT = "the address we sent your access to";
 
 // Texte, die für Kochs Kosmos neu dazugekommen sind; Englisch ist der Fallback für alle Sprachen ohne eigenen Eintrag
 const NEW_KEYS = [
-  "loginname.addressHint",
   "password.set.errors.linkUnusable",
   "password.set.errors.codeUnusable",
   "password.set.newLink",
+  "password.set.newCode",
+  "password.set.linkResent",
+  "password.set.codeResent",
 ];
 
 describe("Prüfmuster", () => {
@@ -99,18 +102,55 @@ describe("locales/en.json", () => {
   });
 });
 
-describe("Texte nennen die Ziele, die sie versprechen", () => {
-  const SPRACHEN: [string, Record<string, string>][] = [
+describe("Texte der zweiten Fassung", () => {
+  test.each([
     ["de", germanTexts],
     ["en", englishTexts],
-  ];
+  ] as [string, Record<string, string>][])(
+    "%s: kein Text schickt auf eine andere Seite, um einen Link zu holen",
+    (_sprache, texts) => {
+      const hits = Object.entries(texts)
+        .filter(([, text]) => text.includes(EINRICHTEN_SEITE))
+        .map(([key]) => key);
 
-  test.each(SPRACHEN)("%s: Link- und Code-Fehler nennen die Seite für einen neuen Link", (_sprache, texts) => {
-    expect(texts["password.set.errors.linkUnusable"]).toContain(NEW_LINK_PAGE);
-    expect(texts["password.set.errors.codeUnusable"]).toContain(NEW_LINK_PAGE);
+      expect(hits).toEqual([]);
+    },
+  );
+
+  test("de: kein Dauerhinweis zur Zahlungsadresse auf der Anmeldeseite", () => {
+    expect(germanTexts["loginname.addressHint"]).toBeUndefined();
+    expect(englishTexts["loginname.addressHint"]).toBeUndefined();
   });
 
-  test.each(SPRACHEN)("%s: der Adress-Hinweis nennt die Support-Adresse", (_sprache, texts) => {
-    expect(texts["loginname.addressHint"]).toContain(SUPPORT_ADDRESS);
+  test("de: der Hinweis zur Adresse steht nur in den Fehlerfällen", () => {
+    const mitHinweis = Object.entries(germanTexts)
+      .filter(([, text]) => text.includes(ADRESS_HINWEIS))
+      .map(([key]) => key)
+      .sort();
+
+    expect(mitHinweis).toEqual([
+      "password.errors.failedToAuthenticate",
+      "password.errors.failedToAuthenticateNoLimit",
+      "password.set.codeResent",
+    ]);
+  });
+
+  test("en: der Hinweis zur Adresse steht in denselben Fehlerfällen", () => {
+    const withHint = Object.entries(englishTexts)
+      .filter(([, text]) => text.includes(ADDRESS_HINT))
+      .map(([key]) => key)
+      .sort();
+
+    expect(withHint).toEqual([
+      "password.errors.failedToAuthenticate",
+      "password.errors.failedToAuthenticateNoLimit",
+      "password.set.codeResent",
+    ]);
+  });
+
+  test("de: Knöpfe nennen ihre Handlung mit „schicken“", () => {
+    expect(germanTexts["password.set.newLink"]).toBe("Neuen Link schicken");
+    expect(germanTexts["password.set.newCode"]).toBe("Neuen Code schicken");
+    expect(germanTexts["password.set.resend"]).toBe("Neuen Code schicken");
   });
 });

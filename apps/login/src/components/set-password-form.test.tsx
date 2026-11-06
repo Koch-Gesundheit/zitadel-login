@@ -61,7 +61,7 @@ describe("SetPasswordForm", () => {
 });
 
 describe("SetPasswordForm bei unbrauchbarem Code", () => {
-  const NEW_LINK_URL = "https://mein.drsimonekoch.de/einrichten";
+  const CTA = "bg-cta";
 
   beforeEach(() => {
     vi.mocked(changePassword).mockReset();
@@ -96,132 +96,146 @@ describe("SetPasswordForm bei unbrauchbarem Code", () => {
     fireEvent.click(button);
   }
 
-  test("zeigt bei einem Code aus dem Link den Linkhinweis und den Weg zu einem neuen Link", async () => {
+  async function submitDeadLink() {
     vi.mocked(changePassword).mockResolvedValue({ error: "Text vom Server", codeProblem: true });
     const view = renderForm("code-aus-dem-link");
-
     await submit(view);
+    await view.findByText("set.errors.linkUnusable");
+    return view;
+  }
 
-    expect(await view.findByText("set.errors.linkUnusable")).toBeInTheDocument();
-    expect(view.queryByText("Text vom Server")).not.toBeInTheDocument();
-
-    const link = view.getByTestId("new-link-button");
-    expect(link.tagName).toBe("A");
-    expect(link).toHaveAttribute("href", NEW_LINK_URL);
-    expect(link).not.toHaveAttribute("target");
-    expect(link).toHaveTextContent("set.newLink");
-  });
-
-  test("zeigt bei einem selbst eingetippten Code den Text des Servers und den Weg zu einem neuen Link", async () => {
-    vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
-    const view = renderForm("code-aus-dem-link");
-
-    await submit(view, { code: "000000" });
-
-    expect(await view.findByText("Der Code stimmt nicht")).toBeInTheDocument();
-    expect(view.queryByText("set.errors.linkUnusable")).not.toBeInTheDocument();
-    expect(view.getByTestId("new-link-button")).toHaveAttribute("href", NEW_LINK_URL);
-  });
-
-  test("zeigt ohne Code im Link den Text des Servers und den Weg zu einem neuen Link", async () => {
-    vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
-    const view = renderForm();
-
-    await submit(view, { code: "000000" });
-
-    expect(await view.findByText("Der Code stimmt nicht")).toBeInTheDocument();
-    expect(view.getByTestId("new-link-button")).toBeInTheDocument();
-  });
-
-  test("zeigt für eine unbekannte Adresse (Platzhalter-ID, kein Code im Link) den Text des Servers und den Weg zu einem neuen Link", async () => {
-    vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
-    const view = renderForm(undefined, UNKNOWN_USER_ID);
-
-    await submit(view, { code: "000000" });
-
-    expect(await view.findByText("Der Code stimmt nicht")).toBeInTheDocument();
-    expect(view.queryByText("set.errors.linkUnusable")).not.toBeInTheDocument();
-    expect(view.getByTestId("new-link-button")).toHaveAttribute("href", NEW_LINK_URL);
-    expect(changePassword).toHaveBeenCalledWith(expect.objectContaining({ userId: UNKNOWN_USER_ID, code: "000000" }));
-  });
-
-  describe("Weiter und Link, wenn der Code aus dem Link nicht mehr geht", () => {
-    const PRIMARY = "bg-primary-light-500";
-
-    async function submitDeadLink() {
-      vi.mocked(changePassword).mockResolvedValue({ error: "Text vom Server", codeProblem: true });
+  describe("Link aus der Mail (Code steckt im Link)", () => {
+    test("zeigt keine Zeile „Keinen Code erhalten?“, weil keine zweite Mail kommt", () => {
       const view = renderForm("code-aus-dem-link");
-      await submit(view);
-      await view.findByText("set.errors.linkUnusable");
-      return view;
-    }
 
-    test("sperrt Weiter und macht den Link zur Hauptaktion", async () => {
+      expect(view.queryByTestId("resend-button")).not.toBeInTheDocument();
+      expect(view.queryByTestId("new-link-button")).not.toBeInTheDocument();
+      expect(view.getByTestId("submit-button").className).toContain(CTA);
+    });
+
+    test("toter Link: nur der Satz und genau ein Hauptknopf, der den neuen Link schickt", async () => {
       const view = await submitDeadLink();
 
-      await waitFor(() => expect(view.getByTestId("submit-button")).toBeDisabled());
-      expect(view.getByTestId("new-link-button").className).toContain(PRIMARY);
+      expect(view.queryByText("Text vom Server")).not.toBeInTheDocument();
+      const button = view.getByTestId("new-link-button");
+      expect(button.tagName).toBe("BUTTON");
+      expect(button).not.toHaveAttribute("href");
+      expect(button).toHaveTextContent("set.newLink");
+      expect(button.className).toContain(CTA);
+
+      // Weiter, Code und Passwortfelder verschwinden: es bleibt eine Handlung
+      expect(view.queryByTestId("submit-button")).not.toBeInTheDocument();
+      expect(view.queryByTestId("code-text-input")).not.toBeInTheDocument();
+      expect(view.queryByTestId("password-set-text-input")).not.toBeInTheDocument();
+      expect(view.queryByTestId("resend-button")).not.toBeInTheDocument();
     });
 
-    test("gibt Weiter wieder frei und macht den Link leise, sobald ein anderer Code im Feld steht", async () => {
-      const view = await submitDeadLink();
-      await waitFor(() => expect(view.getByTestId("submit-button")).toBeDisabled());
-
-      fireEvent.change(view.getByTestId("code-text-input"), { target: { value: "000000" } });
-
-      await waitFor(() => expect(view.getByTestId("submit-button")).toBeEnabled());
-      expect(view.getByTestId("new-link-button")).toBeInTheDocument();
-      expect(view.getByTestId("new-link-button").className).not.toContain(PRIMARY);
-    });
-
-    test("sperrt Weiter wieder, wenn der Code aus dem Link zurückgeschrieben wird", async () => {
-      const view = await submitDeadLink();
-
-      fireEvent.change(view.getByTestId("code-text-input"), { target: { value: "000000" } });
-      await waitFor(() => expect(view.getByTestId("submit-button")).toBeEnabled());
-      fireEvent.change(view.getByTestId("code-text-input"), { target: { value: "code-aus-dem-link" } });
-
-      await waitFor(() => expect(view.getByTestId("submit-button")).toBeDisabled());
-      expect(view.getByTestId("new-link-button").className).toContain(PRIMARY);
-    });
-
-    test("ein getippter falscher Code erklärt den Link nicht für tot, auch wenn der Link-Code zurückkommt", async () => {
-      vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
-      const view = renderForm("code-aus-dem-link");
-      await submit(view, { code: "000000" });
-      await view.findByText("Der Code stimmt nicht");
-      expect(view.getByTestId("submit-button")).toBeEnabled();
-
-      fireEvent.change(view.getByTestId("code-text-input"), { target: { value: "code-aus-dem-link" } });
-
-      await waitFor(() => expect(view.getByTestId("code-text-input")).toHaveValue("code-aus-dem-link"));
-      expect(view.getByTestId("submit-button")).toBeEnabled();
-      expect(view.getByTestId("new-link-button").className).not.toContain(PRIMARY);
-    });
-
-    test("ohne Code im Link bleibt Weiter frei und der Link leise", async () => {
-      vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
-      const view = renderForm(undefined, UNKNOWN_USER_ID);
-      await submit(view, { code: "000000" });
-      await view.findByText("Der Code stimmt nicht");
-
-      expect(view.getByTestId("submit-button")).toBeEnabled();
-      expect(view.getByTestId("new-link-button").className).not.toContain(PRIMARY);
-    });
-
-    test("Erneut senden gibt Weiter wieder frei und blendet den Link aus", async () => {
+    test("der Knopf schickt den neuen Link an das Konto aus dem Link und bestätigt es", async () => {
       vi.mocked(resetPassword).mockResolvedValue({});
       const view = await submitDeadLink();
-      await waitFor(() => expect(view.getByTestId("submit-button")).toBeDisabled());
+
+      fireEvent.click(view.getByTestId("new-link-button"));
+
+      expect(await view.findByTestId("link-resent")).toHaveTextContent("set.linkResent");
+      expect(resetPassword).toHaveBeenCalledWith(expect.objectContaining({ loginName: "test@example.com" }));
+      expect(view.queryByTestId("new-link-button")).not.toBeInTheDocument();
+      expect(view.queryByText("set.errors.linkUnusable")).not.toBeInTheDocument();
+      expect(view.queryByTestId("submit-button")).not.toBeInTheDocument();
+    });
+
+    test("scheitert das Schicken, steht der Fehler da und keine Bestätigung", async () => {
+      vi.mocked(resetPassword).mockResolvedValue({ error: "Gerade nicht möglich" });
+      const view = await submitDeadLink();
+
+      fireEvent.click(view.getByTestId("new-link-button"));
+
+      expect(await view.findByText("Gerade nicht möglich")).toBeInTheDocument();
+      expect(view.queryByTestId("link-resent")).not.toBeInTheDocument();
+    });
+
+    test("wirft der Server, steht der allgemeine Fehler da und keine Bestätigung", async () => {
+      vi.mocked(resetPassword).mockRejectedValue(new Error("weg"));
+      const view = await submitDeadLink();
+
+      fireEvent.click(view.getByTestId("new-link-button"));
+
+      expect(await view.findByText("set.errors.couldNotResetPassword")).toBeInTheDocument();
+      expect(view.queryByTestId("link-resent")).not.toBeInTheDocument();
+    });
+
+    test("ein selbst geänderter Code ist ein Eingabefehler: Weiter bleibt, der neue Link ist ein Nebenweg", async () => {
+      vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
+      const view = renderForm("code-aus-dem-link");
+
+      await submit(view, { code: "000000" });
+
+      expect(await view.findByText("Der Code stimmt nicht")).toBeInTheDocument();
+      expect(view.queryByText("set.errors.linkUnusable")).not.toBeInTheDocument();
+      expect(view.queryByTestId("new-link-button")).not.toBeInTheDocument();
+      const nebenweg = view.getByTestId("new-code-button");
+      expect(nebenweg).toHaveTextContent("set.newLink");
+      expect(nebenweg.className).not.toContain(CTA);
+      expect(view.getByTestId("submit-button")).toBeEnabled();
+    });
+  });
+
+  describe("Code selbst eingetippt (nach „Passwort zurücksetzen“)", () => {
+    test("die Zeile „Keinen Code erhalten?“ schickt einen neuen Code und bestätigt mit dem Hinweis zur Adresse", async () => {
+      vi.mocked(resetPassword).mockResolvedValue({});
+      const view = renderForm();
 
       fireEvent.click(view.getByTestId("resend-button"));
 
-      await waitFor(() => expect(view.queryByTestId("new-link-button")).not.toBeInTheDocument());
+      expect(await view.findByTestId("code-resent")).toHaveTextContent("set.codeResent");
+      expect(view.queryByTestId("resend-button")).not.toBeInTheDocument();
+      expect(view.getByTestId("code-text-input")).toBeInTheDocument();
+      expect(view.getByTestId("submit-button")).toBeInTheDocument();
+    });
+
+    test("falscher Code: Text des Servers, Weiter bleibt Hauptknopf, „Neuen Code schicken“ als Textlink", async () => {
+      vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
+      const view = renderForm();
+
+      await submit(view, { code: "000000" });
+
+      expect(await view.findByText("Der Code stimmt nicht")).toBeInTheDocument();
+      const nebenweg = view.getByTestId("new-code-button");
+      expect(nebenweg).toHaveTextContent("set.newCode");
+      expect(nebenweg.className).not.toContain(CTA);
       expect(view.getByTestId("submit-button")).toBeEnabled();
+      expect(view.getByTestId("submit-button").className).toContain(CTA);
+      // Die obere Zeile verschwindet, solange die Meldung steht: ein Weg zum neuen Code, nicht zwei
+      expect(view.queryByTestId("resend-button")).not.toBeInTheDocument();
+    });
+
+    test("„Neuen Code schicken“ nach falschem Code bestätigt und blendet die Meldung aus", async () => {
+      vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
+      vi.mocked(resetPassword).mockResolvedValue({});
+      const view = renderForm();
+      await submit(view, { code: "000000" });
+      await view.findByText("Der Code stimmt nicht");
+
+      fireEvent.click(view.getByTestId("new-code-button"));
+
+      expect(await view.findByTestId("code-resent")).toBeInTheDocument();
+      expect(view.queryByText("Der Code stimmt nicht")).not.toBeInTheDocument();
+      expect(view.queryByTestId("new-code-button")).not.toBeInTheDocument();
+    });
+
+    test("eine unbekannte Adresse (Platzhalter-ID) sieht dasselbe wie ein falscher Code", async () => {
+      vi.mocked(changePassword).mockResolvedValue({ error: "Der Code stimmt nicht", codeProblem: true });
+      const view = renderForm(undefined, UNKNOWN_USER_ID);
+
+      await submit(view, { code: "000000" });
+
+      expect(await view.findByText("Der Code stimmt nicht")).toBeInTheDocument();
+      expect(view.getByTestId("new-code-button")).toBeInTheDocument();
+      expect(view.queryByText("set.errors.linkUnusable")).not.toBeInTheDocument();
+      expect(changePassword).toHaveBeenCalledWith(expect.objectContaining({ userId: UNKNOWN_USER_ID, code: "000000" }));
     });
   });
 
-  test("andere Fehler zeigen nur den Alert, ohne Link", async () => {
+  test("andere Fehler zeigen nur den Alert, ohne Knopf für Link oder Code", async () => {
     vi.mocked(changePassword).mockResolvedValue({ error: "Das Passwort ist zu schwach" });
     const view = renderForm("code-aus-dem-link");
 
@@ -229,25 +243,27 @@ describe("SetPasswordForm bei unbrauchbarem Code", () => {
 
     expect(await view.findByText("Das Passwort ist zu schwach")).toBeInTheDocument();
     expect(view.queryByTestId("new-link-button")).not.toBeInTheDocument();
+    expect(view.queryByTestId("new-code-button")).not.toBeInTheDocument();
   });
 
-  test("der Link verschwindet, wenn der nächste Versuch an etwas anderem scheitert", async () => {
+  test("der Nebenweg verschwindet, wenn der nächste Versuch an etwas anderem scheitert", async () => {
     vi.mocked(changePassword)
       .mockResolvedValueOnce({ error: "Der Code stimmt nicht", codeProblem: true })
       .mockResolvedValueOnce({ error: "Das Passwort ist zu schwach" });
     const view = renderForm();
 
     await submit(view, { code: "000000" });
-    expect(await view.findByTestId("new-link-button")).toBeInTheDocument();
+    expect(await view.findByTestId("new-code-button")).toBeInTheDocument();
 
     await submit(view, { code: "123456" });
     expect(await view.findByText("Das Passwort ist zu schwach")).toBeInTheDocument();
-    expect(view.queryByTestId("new-link-button")).not.toBeInTheDocument();
+    expect(view.queryByTestId("new-code-button")).not.toBeInTheDocument();
   });
 
-  test("ohne Fehler erscheint kein Link", () => {
+  test("ohne Fehler erscheint kein Knopf für einen neuen Link", () => {
     const view = renderForm("code-aus-dem-link");
 
     expect(view.queryByTestId("new-link-button")).not.toBeInTheDocument();
+    expect(view.queryByTestId("new-code-button")).not.toBeInTheDocument();
   });
 });
