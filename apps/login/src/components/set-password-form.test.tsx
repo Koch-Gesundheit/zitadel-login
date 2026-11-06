@@ -180,6 +180,25 @@ describe("SetPasswordForm bei unbrauchbarem Code", () => {
   });
 
   describe("Code selbst eingetippt (nach „Passwort zurücksetzen“)", () => {
+    test("der Hinweis „Code gesendet“ steht im Formular und wird von der Bestätigung ersetzt, nicht ergänzt", async () => {
+      vi.mocked(resetPassword).mockResolvedValue({});
+      const view = render(
+        <SetPasswordForm
+          passwordComplexitySettings={defaultComplexitySettings}
+          loginName="test@example.com"
+          userId="user-1"
+          codeRequired={true}
+          codeSent={true}
+        />,
+      );
+      expect(view.getByTestId("code-sent")).toHaveTextContent("set.codeSent");
+
+      fireEvent.click(view.getByTestId("resend-button"));
+
+      expect(await view.findByTestId("code-resent")).toBeInTheDocument();
+      expect(view.queryByTestId("code-sent")).not.toBeInTheDocument();
+    });
+
     test("die Zeile „Keinen Code erhalten?“ schickt einen neuen Code und bestätigt mit dem Hinweis zur Adresse", async () => {
       vi.mocked(resetPassword).mockResolvedValue({});
       const view = renderForm();

@@ -36,6 +36,9 @@ type Props = {
   defaultOrganization?: string;
   requestId?: string;
   codeRequired: boolean;
+  // Hinweis „Code gesendet“ (nur nach „Passwort zurücksetzen“); steht im Formular, damit die Bestätigung nach dem
+  // erneuten Schicken ihn ersetzt statt sich darunter zu stapeln
+  codeSent?: boolean;
 };
 
 export function SetPasswordForm({
@@ -47,6 +50,7 @@ export function SetPasswordForm({
   userId,
   code,
   codeRequired,
+  codeSent = false,
 }: Props) {
   const { register, handleSubmit, watch, formState } = useForm<Inputs>({
     mode: "onChange",
@@ -209,6 +213,11 @@ export function SetPasswordForm({
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
       <form className="w-full">
         <div className="mb-4 grid grid-cols-1 gap-4 pt-4">
+          {codeSent && !resent && (
+            <Alert type={AlertType.INFO}>
+              <span data-testid="code-sent">{t("set.codeSent")}</span>
+            </Alert>
+          )}
           {codeRequired && !linkFlow && resent && (
             <Alert type={AlertType.INFO}>
               <span data-testid="code-resent">{t("set.codeResent")}</span>

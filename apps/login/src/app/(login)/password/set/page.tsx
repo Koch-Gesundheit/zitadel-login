@@ -1,4 +1,4 @@
-import { Alert, AlertType } from "@/components/alert";
+import { Alert } from "@/components/alert";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SetPasswordForm } from "@/components/set-password-form";
 import { Translated } from "@/components/translated";
@@ -131,12 +131,6 @@ export default async function Page(props: { searchParams: Promise<Record<string 
       </div>
 
       <div className="w-full">
-        {showCodeSentBanner({ initial, code }) && (
-          <Alert type={AlertType.INFO}>
-            <Translated i18nKey="set.codeSent" namespace="password" />
-          </Alert>
-        )}
-
         {passwordComplexity &&
         (loginName ?? user?.preferredLoginName) &&
         (userId ?? session?.factors?.user?.id ?? (loginSettings?.ignoreUnknownUsernames ? UNKNOWN_USER_ID : undefined)) ? (
@@ -149,6 +143,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             defaultOrganization={defaultOrganization}
             passwordComplexitySettings={passwordComplexity}
             codeRequired={!(initial === "true")}
+            codeSent={showCodeSentBanner({ initial, code })}
           />
         ) : (
           <div className="py-4">
