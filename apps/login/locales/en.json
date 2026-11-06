@@ -107,7 +107,7 @@
         "codeUnusable": "The code is wrong or has expired. Check what you typed or have a new code sent to you."
       },
       "newCode": "Send a new code",
-      "linkResent": "A new link is on its way. Only our most recent email counts. Please also check your spam folder.",
+      "linkResent": "A new link is on its way. Only our most recent email counts. Please also check your spam folder. If nothing arrives, write to support@drsimonekoch.de.",
       "codeResent": "If an account belongs to this address, a new code is on its way. If nothing arrives again, go back and use the address we sent your access to."
     },
     "change": {

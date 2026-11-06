@@ -107,7 +107,7 @@
         "codeUnusable": "Der Code stimmt nicht oder ist abgelaufen. Prüf deine Eingabe noch einmal oder lass dir einen neuen Code schicken."
       },
       "newCode": "Neuen Code schicken",
-      "linkResent": "Ein neuer Link ist unterwegs. Es zählt nur die neueste Mail von uns. Schau auch im Spam-Ordner nach.",
+      "linkResent": "Ein neuer Link ist unterwegs. Es zählt nur die neueste Mail von uns. Schau auch im Spam-Ordner nach. Kommt nichts an, schreib an support@drsimonekoch.de.",
       "codeResent": "Wenn zu dieser Adresse ein Konto gehört, ist ein neuer Code unterwegs. Kommt wieder nichts an, geh zurück und nimm die Adresse, an die wir dir deinen Zugang geschickt haben."
     },
     "change": {

@@ -8,7 +8,7 @@ import { ChecksSchema } from "@zitadel/proto/zitadel/session/v2/session_service_
 import { PasswordComplexitySettings } from "@zitadel/proto/zitadel/settings/v2/password_settings_pb";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { Alert, AlertType } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
@@ -67,13 +67,15 @@ export function SetPasswordForm({
   const [unusableCode, setUnusableCode] = useState<string | null>(null);
   // Ein neuer Link oder Code ist angefordert; vorher kam nach „Erneut senden“ keine Rückmeldung
   const [resent, setResent] = useState<boolean>(false);
+  // Der Link aus der Mail ist tot: ab dann zeigt die Seite nur noch den Satz und den einen Knopf, auch während des
+  // Schickens und nach einem Fehler beim Schicken, bis der neue Link unterwegs ist
+  const [linkTot, setLinkTot] = useState<boolean>(false);
+  const bestaetigungRef = useRef<HTMLSpanElement>(null);
   const [samlData, setSamlData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
 
   const router = useRouter();
 
   async function resendCode() {
-    setError("");
-    setUnusableCode(null);
     setResent(false);
     setLoading(true);
 
@@ -101,11 +103,22 @@ export function SetPasswordForm({
     }
 
     // Auch für eine Adresse ohne Konto antwortet der Server ohne Fehler (ignoreUnknownUsernames); die Bestätigung bleibt gleich
+    setError("");
+    setUnusableCode(null);
     setResent(true);
   }
 
+  // Nach dem Schicken springt der Fokus auf die Bestätigung, damit Bildschirmleser sie vorlesen und die Tastatur nicht
+  // auf dem verschwundenen Knopf hängt
+  useEffect(() => {
+    if (resent) {
+      bestaetigungRef.current?.focus();
+    }
+  }, [resent]);
+
   async function submitPassword(values: Inputs) {
     setLoading(true);
+    setError("");
     setUnusableCode(null);
     setResent(false);
 
@@ -132,7 +145,11 @@ export function SetPasswordForm({
     if (changeResponse && "error" in changeResponse) {
       if ("codeProblem" in changeResponse && changeResponse.codeProblem) {
         // Steht der Code aus dem Link unverändert im Feld, ist der Link das Problem, sonst die Eingabe.
-        setError(code && values.code === code ? t("set.errors.linkUnusable") : changeResponse.error);
+        if (code && values.code === code) {
+          setLinkTot(true);
+        } else {
+          setError(changeResponse.error);
+        }
         setUnusableCode(values.code ?? "");
         return;
       }
@@ -182,17 +199,13 @@ export function SetPasswordForm({
 
   const watchPassword = watch("password", "");
   const watchConfirmPassword = watch("confirmPassword", "");
-  const watchCode = watch("code", "");
 
   // Der Code steckt im Link aus der Mail: dann gibt es nichts abzutippen und keine zweite Mail, auf die man warten müsste
   const linkFlow = !!code;
   const codeProblem = unusableCode !== null;
-  // Der Server hat den Code aus dem Link als unbrauchbar gemeldet und er steht unverändert im Feld: Weiter scheitert mit
-  // demselben Code wieder, der einzige Ausweg ist ein neuer Link. Gebunden an den gemeldeten Code, damit ein zuvor
-  // getippter, falscher Code den Link nicht zu Unrecht für tot erklärt, wenn die Nutzerin den Link-Code wieder einträgt.
-  const linkDead = linkFlow && unusableCode === code && watchCode === code;
-  // Toter Link: Die Seite zeigt nur noch die Meldung und genau einen Knopf, der den neuen Link schickt
-  const onlyNewLink = linkDead || (linkFlow && resent);
+  // Toter Link: Die Seite zeigt nur noch die Meldung und genau einen Knopf, der den neuen Link schickt (Felder weg,
+  // damit niemand denselben toten Code noch einmal abschickt); nach dem Schicken nur noch die Bestätigung
+  const onlyNewLink = linkFlow && (linkTot || resent);
 
   const hasMinLength = passwordComplexitySettings && watchPassword?.length >= passwordComplexitySettings.minLength;
   const hasSymbol = symbolValidator(watchPassword);
@@ -211,7 +224,7 @@ export function SetPasswordForm({
   return (
     <>
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
-      <form className="w-full">
+      <form className="w-full" data-link-tot={onlyNewLink ? "" : undefined}>
         <div className="mb-4 grid grid-cols-1 gap-4 pt-4">
           {codeSent && !resent && (
             <Alert type={AlertType.INFO}>
@@ -220,7 +233,9 @@ export function SetPasswordForm({
           )}
           {codeRequired && !linkFlow && resent && (
             <Alert type={AlertType.INFO}>
-              <span data-testid="code-resent">{t("set.codeResent")}</span>
+              <span ref={bestaetigungRef} tabIndex={-1} className="outline-none" data-testid="code-resent">
+                {t("set.codeResent")}
+              </span>
             </Alert>
           )}
           {codeRequired && !linkFlow && !resent && !codeProblem && (
@@ -233,7 +248,7 @@ export function SetPasswordForm({
                   aria-label={t("set.resend")}
                   disabled={loading}
                   type="button"
-                  className="text-primary-light-500 hover:text-primary-light-400 dark:text-primary-dark-500 hover:dark:text-primary-dark-400 ml-4 cursor-pointer disabled:cursor-default disabled:text-gray-400 dark:disabled:text-gray-700"
+                  className="text-primary-light-500 hover:text-primary-light-400 dark:text-primary-dark-500 hover:dark:text-primary-dark-400 ml-4 inline-flex min-h-11 cursor-pointer items-center underline underline-offset-4 disabled:cursor-default disabled:text-gray-400 dark:disabled:text-gray-700"
                   onClick={() => {
                     resendCode();
                   }}
@@ -301,16 +316,21 @@ export function SetPasswordForm({
           />
         )}
 
+        {linkFlow && linkTot && !resent && <Alert>{t("set.errors.linkUnusable")}</Alert>}
+
         {error && <Alert>{error}</Alert>}
 
         {linkFlow && resent && (
           <Alert type={AlertType.INFO}>
-            <span data-testid="link-resent">{t("set.linkResent")}</span>
+            <span ref={bestaetigungRef} tabIndex={-1} className="outline-none" data-testid="link-resent">
+              {t("set.linkResent")}
+            </span>
           </Alert>
         )}
 
-        {/* Toter Link: ein Hauptknopf, der den neuen Link direkt an die Adresse des Kontos schickt (keine Adresse abtippen) */}
-        {linkDead && (
+        {/* Toter Link: ein Hauptknopf, der den neuen Link direkt an die Adresse des Kontos schickt (keine Adresse abtippen).
+            Er bleibt stehen, während er schickt (gesperrt mit Spinner) und wenn das Schicken scheitert. */}
+        {linkFlow && linkTot && !resent && (
           <div className="mt-4">
             <Button
               type="button"
@@ -328,7 +348,7 @@ export function SetPasswordForm({
         )}
 
         {/* Falscher oder abgelaufener Code beim Abtippen: Weiter bleibt der Hauptknopf, der neue Code ist ein Nebenweg */}
-        {codeProblem && !linkDead && (
+        {codeProblem && !linkTot && (
           <div className="mt-2">
             <button
               type="button"

@@ -143,7 +143,7 @@ describe("SetPasswordForm bei unbrauchbarem Code", () => {
       expect(view.queryByTestId("submit-button")).not.toBeInTheDocument();
     });
 
-    test("scheitert das Schicken, steht der Fehler da und keine Bestätigung", async () => {
+    test("scheitert das Schicken, bleiben Satz und Knopf stehen, kein Formular kommt zurück", async () => {
       vi.mocked(resetPassword).mockResolvedValue({ error: "Gerade nicht möglich" });
       const view = await submitDeadLink();
 
@@ -151,6 +151,41 @@ describe("SetPasswordForm bei unbrauchbarem Code", () => {
 
       expect(await view.findByText("Gerade nicht möglich")).toBeInTheDocument();
       expect(view.queryByTestId("link-resent")).not.toBeInTheDocument();
+      expect(view.getByText("set.errors.linkUnusable")).toBeInTheDocument();
+      await waitFor(() => expect(view.getByTestId("new-link-button")).toBeEnabled());
+      expect(view.queryByTestId("password-set-text-input")).not.toBeInTheDocument();
+      expect(view.queryByTestId("submit-button")).not.toBeInTheDocument();
+    });
+
+    test("während des Schickens bleibt der Knopf stehen (gesperrt), das Formular kommt nicht zurück", async () => {
+      let fertig: (wert: object) => void = () => {};
+      vi.mocked(resetPassword).mockReturnValue(new Promise((resolve) => (fertig = resolve)) as never);
+      const view = await submitDeadLink();
+
+      fireEvent.click(view.getByTestId("new-link-button"));
+
+      await waitFor(() => expect(view.getByTestId("new-link-button")).toBeDisabled());
+      expect(view.getByText("set.errors.linkUnusable")).toBeInTheDocument();
+      expect(view.queryByTestId("password-set-text-input")).not.toBeInTheDocument();
+
+      fertig({});
+      expect(await view.findByTestId("link-resent")).toBeInTheDocument();
+    });
+
+    test("nach dem Schicken liegt der Fokus auf der Bestätigung", async () => {
+      vi.mocked(resetPassword).mockResolvedValue({});
+      const view = await submitDeadLink();
+
+      fireEvent.click(view.getByTestId("new-link-button"));
+
+      const bestaetigung = await view.findByTestId("link-resent");
+      await waitFor(() => expect(bestaetigung).toHaveFocus());
+    });
+
+    test("solange nur der tote Link gezeigt wird, trägt das Formular data-link-tot (der Untertitel blendet sich aus)", async () => {
+      const view = await submitDeadLink();
+
+      expect(view.container.querySelector("form[data-link-tot]")).not.toBeNull();
     });
 
     test("wirft der Server, steht der allgemeine Fehler da und keine Bestätigung", async () => {

@@ -123,7 +123,7 @@ export function PasswordForm({ loginSettings, loginName, organization, defaultOr
           />
           {!loginSettings?.hidePasswordReset && (
             <button
-              className="hover:text-primary-light-500 dark:hover:text-primary-dark-500 text-sm transition-all"
+              className="hover:text-primary-light-500 dark:hover:text-primary-dark-500 inline-flex min-h-11 items-center text-sm underline underline-offset-4 transition-all"
               onClick={() => resetPasswordAndContinue()}
               type="button"
               disabled={loading}

@@ -48,7 +48,8 @@ export const getButtonClasses = (
       "border border-button-light-border dark:border-button-dark-border text-warn-light-500 dark:text-warn-dark-500 hover:bg-warn-light-500 hover:bg-opacity-10 dark:hover:bg-warn-light-500 dark:hover:bg-opacity-10 focus:bg-warn-light-500 focus:bg-opacity-20 dark:focus:bg-warn-light-500 dark:focus:bg-opacity-20":
         color === ButtonColors.Warn && variant !== ButtonVariants.Primary,
       "px-16 py-2": size === ButtonSizes.Large,
-      "px-4 h-[36px]": size === ButtonSizes.Small,
+      // min-h-11: 44 px Fingerziel am Handy (Kosmos-Regel), gilt für Weiter, Zurück und den Knopf „Neuen Link schicken“
+      "px-4 h-[36px] min-h-11": size === ButtonSizes.Small,
     },
     roundnessClasses, // Apply the full roundness classes directly
     appearance, // Apply appearance-specific styling (shadows, borders, etc.)

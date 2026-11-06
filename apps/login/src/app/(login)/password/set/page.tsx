@@ -105,7 +105,8 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     <DynamicTheme branding={branding}>
       <div className="flex flex-col space-y-4">
         <h1>{session?.factors?.user?.displayName ?? <Translated i18nKey="set.title" namespace="password" />}</h1>
-        <p className="ztdl-p mb-6 block">
+        {/* Bei totem Link steht unten nur „Neuen Link schicken“; die Aufforderung zum Passwort entfällt dann (data-link-tot, :has) */}
+        <p className="ztdl-p mb-6 block [:root:has([data-link-tot])_&]:hidden">
           <Translated i18nKey="set.description" namespace="password" />
         </p>
 
