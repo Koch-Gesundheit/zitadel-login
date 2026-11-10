@@ -1,5 +1,6 @@
 "use server";
 
+import { UNKNOWN_USER_ID } from "@/lib/constants";
 import { isClassifiedError } from "@/lib/grpc/interceptors/error-classification";
 import { createLogger } from "@/lib/logger";
 import { recordAuthAttempt, recordAuthFailure, recordAuthSuccess } from "@/lib/metrics";
@@ -24,6 +25,7 @@ import { SetPasswordRequestSchema } from "@zitadel/proto/zitadel/user/v2/user_se
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import { completeFlowOrGetUrl } from "../client";
+import { errorMessage, isCodeProblem } from "../code-errors";
 import { getSessionCookieById, getSessionCookieByLoginName } from "../cookies";
 import { getServiceConfig } from "../service-url";
 import {
@@ -445,11 +447,30 @@ export async function sendPassword(
   return { error: "Authentication completed but navigation failed" };
 }
 
+// `codeProblem` ist gesetzt, wenn der Code (Link) unbrauchbar ist; explizit angegeben, sonst fasst TypeScript die Antworten
+// auf `{ error: string }` zusammen und der Browser sieht das Feld nicht.
+type ChangePasswordResult = Awaited<ReturnType<typeof setUserPassword>> | { error: string; codeProblem?: boolean };
+
 // this function lets users with code set a password or users with valid User Verification Check
-export async function changePassword(command: { code?: string; userId: string; password: string; organization?: string }) {
+export async function changePassword(command: {
+  code?: string;
+  userId: string;
+  password: string;
+  organization?: string;
+}): Promise<ChangePasswordResult> {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
   const t = await getTranslations("password");
+
+  // Antwort für einen unbrauchbaren Code (Link benutzt, abgelaufen, falsch).
+  const codeProblem = { error: t("set.errors.codeUnusable"), codeProblem: true };
+
+  // Die Seite setzt die Platzhalter-ID, wenn zur Adresse kein Konto gehört (ignoreUnknownUsernames). Sie bekommt dieselbe
+  // Antwort wie ein unbrauchbarer Code, sonst verriete der Unterschied, ob es das Konto gibt; getUserByID würfe für die ID
+  // einen Fehler.
+  if (command.userId === UNKNOWN_USER_ID) {
+    return codeProblem;
+  }
 
   // check for init state
   const { user } = await getUserByID({ serviceConfig, userId: command.userId });
@@ -486,7 +507,23 @@ export async function changePassword(command: { code?: string; userId: string; p
     }
   }
 
-  return setUserPassword({ serviceConfig, userId, password: command.password, code: command.code });
+  // Ein unbrauchbarer Code kommt je nach Fehlerart zurückgegeben oder geworfen an. Geworfene Fehler gehen in der Produktion
+  // nur als Standardtext zum Browser, darum beides hier in dieselbe Antwort fassen.
+  try {
+    const result = await setUserPassword({ serviceConfig, userId, password: command.password, code: command.code });
+
+    if (result && "error" in result && isCodeProblem(result.error)) {
+      return codeProblem;
+    }
+
+    return result;
+  } catch (error) {
+    if (isCodeProblem(errorMessage(error))) {
+      return codeProblem;
+    }
+
+    throw error;
+  }
 }
 
 type CheckSessionAndSetPasswordCommand = {

@@ -112,8 +112,10 @@ export function UsernameForm({
             label={inputLabel}
             data-testid="username-text-input"
             suffix={suffix}
+            aria-describedby="password-reset-hint"
           />
           <p
+            id="password-reset-hint"
             className="text-text-light-secondary-500 dark:text-text-dark-secondary-500 mt-2 text-sm"
             data-testid="password-reset-hint"
           >

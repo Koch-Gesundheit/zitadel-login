@@ -38,7 +38,8 @@ export const getButtonClasses = (
       "box-border leading-36px text-14px inline-flex items-center focus:outline-none transition-colors transition-shadow duration-300": true,
       "disabled:border-none disabled:bg-gray-300 disabled:text-gray-600 disabled:shadow-none disabled:cursor-not-allowed disabled:dark:bg-gray-700 disabled:dark:text-gray-900":
         variant === ButtonVariants.Primary,
-      "bg-primary-light-500 dark:bg-primary-dark-500 hover:bg-primary-light-400 hover:dark:bg-primary-dark-400 text-primary-light-contrast-500 dark:text-primary-dark-contrast-500":
+      // Der Hauptknopf ist pink (Kosmos-Farbe cta), Links und Fokus behalten die Farbe aus dem Branding von Zitadel
+      "bg-cta hover:bg-cta-hover text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta":
         variant === ButtonVariants.Primary && color !== ButtonColors.Warn,
       "bg-warn-light-500 dark:bg-warn-dark-500 hover:bg-warn-light-400 hover:dark:bg-warn-dark-400 text-white dark:text-white":
         variant === ButtonVariants.Primary && color === ButtonColors.Warn,
@@ -47,7 +48,8 @@ export const getButtonClasses = (
       "border border-button-light-border dark:border-button-dark-border text-warn-light-500 dark:text-warn-dark-500 hover:bg-warn-light-500 hover:bg-opacity-10 dark:hover:bg-warn-light-500 dark:hover:bg-opacity-10 focus:bg-warn-light-500 focus:bg-opacity-20 dark:focus:bg-warn-light-500 dark:focus:bg-opacity-20":
         color === ButtonColors.Warn && variant !== ButtonVariants.Primary,
       "px-16 py-2": size === ButtonSizes.Large,
-      "px-4 h-[36px]": size === ButtonSizes.Small,
+      // min-h-11: 44 px Fingerziel am Handy (Kosmos-Regel), gilt für Weiter, Zurück und den Knopf „Neuen Link schicken“
+      "px-4 h-[36px] min-h-11": size === ButtonSizes.Small,
     },
     roundnessClasses, // Apply the full roundness classes directly
     appearance, // Apply appearance-specific styling (shadows, borders, etc.)

@@ -53,6 +53,11 @@ export default {
       },
       colors: {
         gray: colors.zinc,
+        // Hauptknopf von Kochs Kosmos (Berry aus @dsk/design-tokens: berry-500, Hover berry-700); weiße Schrift 5,3:1 und 8,6:1
+        cta: {
+          DEFAULT: "#A64D79",
+          hover: "#7A3358",
+        },
         // Dynamic theme colors
         ...themeColors,
         // State colors
