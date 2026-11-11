@@ -9,7 +9,7 @@ exclude:
   - benchmark # because of the node 18 or 20 dependency
 
 overrides:
-  "tar@<7.5.11": "^7.5.11 <8.0.0"
+  "tar@<7.5.19": "^7.5.19 <8.0.0"
   "flatted@<3.4.2": "^3.4.2"
   "rollup@>=4.0.0 <4.59.0": "^4.59.0"
   "socket.io-parser@>=4.0.0 <4.2.6": "^4.2.6"
@@ -29,3 +29,6 @@ overrides:
   "systeminformation@<5.31.6": "^5.31.6"
   "tmp@<0.2.6": "^0.2.6"
   "fast-uri@<3.1.2": "^3.1.2"
+  "proxy-addr@<2.0.8": "^2.0.8"
+  "piscina@>=5.0.0 <5.3.2": "^5.3.2"
+  "shell-quote@<1.8.4": "^1.8.4"
