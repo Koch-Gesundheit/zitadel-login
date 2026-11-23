@@ -39,8 +39,10 @@ describe("Auswahl der Anmeldeart nach dem Code aus der Mail (Konto ohne Passwort
 
     const text = screen.getByText("Passwort festlegen");
     expect(text).toHaveAttribute("data-i18n-key", "authenticator.methods.passwordSetup");
-    expect(text.closest("a")).toHaveAttribute("href", "/password/set?" + params);
+    // Vorlesename gleich der sichtbaren Beschriftung, ohne den Namen des Symbols („form-textbox-password“)
+    expect(screen.getByRole("link", { name: "Passwort festlegen" })).toHaveAttribute("href", "/password/set?" + params);
     expect(screen.queryByText("Password")).not.toBeInTheDocument();
+    expect(screen.queryByText("form-textbox-password")).not.toBeInTheDocument();
   });
 
   test("en: die Karte bleibt „Password“", () => {
@@ -71,7 +73,7 @@ describe("Karte Passwort ohne eigenen Schlüssel (Anmelden mit vorhandenem Passw
 
     const text = screen.getByText("Passwort");
     expect(text).toHaveAttribute("data-i18n-key", "authenticator.methods.password");
-    expect(text.closest("a")).toHaveAttribute("href", "/password?" + params);
+    expect(screen.getByRole("link", { name: "Passwort" })).toHaveAttribute("href", "/password?" + params);
   });
 
   test("en: „Password“", () => {
