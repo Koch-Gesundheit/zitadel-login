@@ -428,7 +428,11 @@
     "description": "Select the method you would like to authenticate",
     "noMethodsAvailable": "No authentication methods available",
     "allSetup": "You have already setup an authenticator!",
-    "linkWithIDP": "or link with an Identity Provider"
+    "linkWithIDP": "or link with an Identity Provider",
+    "methods": {
+      "password": "Password",
+      "passwordSetup": "Password"
+    }
   },
   "device": {
     "usercode": {

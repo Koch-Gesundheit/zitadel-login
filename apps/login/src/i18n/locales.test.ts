@@ -38,6 +38,8 @@ const NEW_KEYS = [
   "password.set.newCode",
   "password.set.linkResent",
   "password.set.codeResent",
+  "authenticator.methods.password",
+  "authenticator.methods.passwordSetup",
 ];
 
 describe("Prüfmuster", () => {
@@ -152,5 +154,32 @@ describe("Texte der zweiten Fassung", () => {
     expect(germanTexts["password.set.newLink"]).toBe("Neuen Link schicken");
     expect(germanTexts["password.set.newCode"]).toBe("Neuen Code schicken");
     expect(germanTexts["password.set.resend"]).toBe("Neuen Code schicken");
+  });
+});
+
+// Mail an Konten ohne Passwort (E-1610, seit 22.11.2026): „Du kannst auch den Code … auf der Anmeldeseite eingeben.“,
+// Button „Passwort festlegen“. Die Seiten danach nehmen dieselben Wörter (login-seitentexte-1123).
+describe("Seiten nach der Mail an Konten ohne Passwort", () => {
+  test("de: die Seite für den Code heißt „Code eingeben“", () => {
+    expect(germanTexts["verify.verify.title"]).toBe("Code eingeben");
+  });
+
+  test("de: kein Text sagt noch „Benutzer verifizieren“", () => {
+    const hits = Object.entries(germanTexts)
+      .filter(([, text]) => text.includes("Benutzer verifizieren"))
+      .map(([key]) => key);
+
+    expect(hits).toEqual([]);
+  });
+
+  test("de: die Karte beim Einrichten heißt wie der Button der Mail, beim Anmelden „Passwort“", () => {
+    expect(germanTexts["authenticator.methods.passwordSetup"]).toBe("Passwort festlegen");
+    expect(germanTexts["authenticator.methods.password"]).toBe("Passwort");
+  });
+
+  test("en: unverändert „Verify user“ und „Password“ (Englisch ist der Rückfall aller anderen Sprachen)", () => {
+    expect(englishTexts["verify.verify.title"]).toBe("Verify user");
+    expect(englishTexts["authenticator.methods.passwordSetup"]).toBe("Password");
+    expect(englishTexts["authenticator.methods.password"]).toBe("Password");
   });
 });
