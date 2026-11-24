@@ -15,7 +15,10 @@ on:
 jobs:
   lint_test_build:
     name: Lint, Test and Build
-    runs-on: depot-ubuntu-22.04-16
+    # Fork Koch-Gesundheit: Es gibt kein Depot-Konto. Der Runner depot-ubuntu-22.04-16 wird nie vergeben,
+    # der Lauf wartet 24 Stunden und GitHub bricht ihn ab. Das Repo ist öffentlich, Standard-Runner
+    # von GitHub kosten dort nichts (e1726-login-nachzug-1124). Beim Hersteller-Abgleich diese Zeile behalten.
+    runs-on: ubuntu-22.04
     environment: ${{ github.ref_protected == 'true' && 'Protected' || null }}
     steps:
       - name: Checkout Repository
