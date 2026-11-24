@@ -393,7 +393,7 @@
     "successContinue": "Weiter",
     "setupAuthenticator": "Authentifikator einrichten",
     "verify": {
-      "title": "Benutzer verifizieren",
+      "title": "Code eingeben",
       "description": "Gib den Code ein, der in der Bestätigungs-E-Mail angegeben ist.",
       "noCodeReceived": "Keinen Code erhalten?",
       "resendCode": "Code erneut senden",
@@ -428,7 +428,11 @@
     "description": "Wähle die Methode, mit der du dich authentifizieren möchtest.",
     "noMethodsAvailable": "Keine Authentifizierungsmethoden verfügbar",
     "allSetup": "Du hast bereits einen Authentifikator eingerichtet!",
-    "linkWithIDP": "oder verknüpfe mit einem Identitätsanbieter"
+    "linkWithIDP": "oder verknüpfe mit einem Identitätsanbieter",
+    "methods": {
+      "password": "Passwort",
+      "passwordSetup": "Passwort festlegen"
+    }
   },
   "device": {
     "usercode": {

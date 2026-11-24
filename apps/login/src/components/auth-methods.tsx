@@ -3,6 +3,7 @@ import { clsx } from "clsx";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { BadgeState, StateBadge } from "./state-badge";
+import { Translated } from "./translated";
 
 const cardClasses = (alreadyAdded: boolean) =>
   clsx(
@@ -160,15 +161,26 @@ export const PASSKEYS = (alreadyAdded: boolean, link: string) => {
   );
 };
 
-export const PASSWORD = (alreadyAdded: boolean, link: string) => {
+// Schlüssel wie im Hersteller-Code (zitadel/zitadel 78be61835, „methods.password“); „methods.passwordSetup“ ist unser
+// eigener für die Auswahl beim Einrichten, dort heißt die Karte wie der Button der Mail an Konten ohne Passwort.
+export type PasswordLabelKey = "methods.password" | "methods.passwordSetup";
+
+export const PASSWORD = (alreadyAdded: boolean, link: string, labelKey: PasswordLabelKey = "methods.password") => {
   return (
     <LinkWrapper key={link} alreadyAdded={alreadyAdded} link={link}>
       <div className={clsx("flex items-center font-medium", alreadyAdded ? "" : "")}>
-        <svg className="mr-4 h-7 w-8 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <title>form-textbox-password</title>
+        {/* Symbol neben sichtbarem Text: für Bildschirmleser ausgeblendet, ohne <title>, sonst lesen sie und der Tooltip
+            „form-textbox-password“ vor der Beschriftung */}
+        <svg
+          className="mr-4 h-7 w-8 fill-current"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
           <path d="M17,7H22V17H17V19A1,1 0 0,0 18,20H20V22H17.5C16.95,22 16,21.55 16,21C16,21.55 15.05,22 14.5,22H12V20H14A1,1 0 0,0 15,19V5A1,1 0 0,0 14,4H12V2H14.5C15.05,2 16,2.45 16,3C16,2.45 16.95,2 17.5,2H20V4H18A1,1 0 0,0 17,5V7M2,7H13V9H4V15H13V17H2V7M20,15V9H17V15H20M8.5,12A1.5,1.5 0 0,0 7,10.5A1.5,1.5 0 0,0 5.5,12A1.5,1.5 0 0,0 7,13.5A1.5,1.5 0 0,0 8.5,12M13,10.89C12.39,10.33 11.44,10.38 10.88,11C10.32,11.6 10.37,12.55 11,13.11C11.55,13.63 12.43,13.63 13,13.11V10.89Z" />
         </svg>
-        <span>Password</span>
+        <Translated i18nKey={labelKey} namespace="authenticator" />
       </div>
       {alreadyAdded && (
         <>
